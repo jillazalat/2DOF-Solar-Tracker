@@ -10,13 +10,13 @@
 //initialize variables
 #define steps 32
 int Steps; //1 Rev = 2048 steps
-Stepper myStepper(steps, 9, 11, 10, 12);
+Stepper myStepper(steps, 9, 10, 11, 12);
 
 Servo myServo;
-int angle = 90;
-int rotate = 2;
+int angle = 0;
+int rotate = 5;
 
-int photores_1 = A0, photores_2 = A1;
+int photores_1 = 0, photores_2 = 1;
 int photoread_1, photoread_2;
 
 int error_1, error_2;
@@ -26,7 +26,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin (9600);  //Begin serial monitor at 9600 baudrate
   myServo.attach(3);    //connect servo to pin 3
-  myServo.write(90);    //Set servo position to 90 deg
+  myServo.write(0);    //Set servo position to 90 deg
 
   myStepper.setSpeed(300);  //Set stepper speed
 }
