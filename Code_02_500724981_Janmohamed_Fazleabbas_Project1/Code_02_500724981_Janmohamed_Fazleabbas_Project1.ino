@@ -14,7 +14,7 @@ Stepper myStepper(steps, 9, 10, 11, 12);
 
 Servo myServo;
 int angle = 0;
-int rotate = 5;
+int rotate = 15;
 
 int photores_1 = 0, photores_2 = 1;
 int photoread_1, photoread_2;
@@ -26,7 +26,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin (9600);  //Begin serial monitor at 9600 baudrate
   myServo.attach(5);    //connect servo to pin 3
-  myServo.write(0);    //Set servo position to 90 deg
+  myServo.write(90);    //Set servo position to 90 deg
 
   myStepper.setSpeed(300);  //Set stepper speed
 }
@@ -35,7 +35,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   photoread_1 = analogRead(photores_1);     //Read photoresistor 1
   photoread_2 = analogRead(photores_2);     //Read photoresistor 2
-  error_2 = error_1;
+  //error_2 = error_1;
   error_1 = photoread_2 - photoread_1;        //calculate error
 
   //Azimuth sweep motion
@@ -50,25 +50,31 @@ void loop() {
     return;     //Reapeat loop
   }
 
-  
-  error_1 = photoread_2 - photoread_1;
+  error_2 = error_1;
+  //error_1 = photoread_2 - photoread_1;
   //Altitude sweep motion
-  if (error_1 > 0) {            //error_1 < 0 &&
-    angle = angle + rotate;
-    if (error_2 < error_1) {
-      angle = angle - rotate;
+  if (error_1 < 0 && error_1 < -10) {            //error_1 < 0 &&
+    angle = angle - rotate;
+    if (angle <= 0) {
+      angle = 75;
     }
     myServo.write(angle);
-    delay(100);
+    error_1 = photoread_2 - photoread_1;
+    if (error_2 < error_1) {
+    myServo.write(angle + rotate);
+    }
   }
-  else if (error_1 < 0) {
-    //myServo.write(angle - rotate);
-    angle = angle - 10;
-    if (error_2 < error_1) {
+    //angle = angle - 10;
+    else if (error_1 > 0 && error_1 > 10) {
       angle = angle + rotate;
+      if (angle >= 120) {
+        angle = 140;
     }
     myServo.write(angle);
-    delay(100);
+    error_1 = photoread_2 - photoread_1;
+    if (error_2 < error_1) {
+      myServo.write(angle - rotate);
+    }
   }
   //} else if (error_1 > 20) {          //error_1 > 0 &&
   //angle = angle + rotate;
@@ -82,7 +88,7 @@ void loop() {
   // }
   //}
   //delay (100);        //delay to allow motion
-
+  Serial.print(angle);
   //Print values
   Serial.print("Photoresistor reading 1 = " + String(photoread_1) + " photoresistor reading 2 = " + String(photoread_2) + " " + String(error_1) + " " + String(error_2) + "\n");
 }
