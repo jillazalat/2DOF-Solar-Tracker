@@ -10,7 +10,7 @@ int servo_pin = 6;
 Servo myServo;
 int servo_upper_limit = 90; //test these value out to see how system behaves 
 int servo_lower_limit = 0;
-int servo_pos = 0;
+int servo_pos = 45;
 
 //declare stepper pins
 int stepper_pin1 = 11;
@@ -50,8 +50,8 @@ void setup() {
   //attach servo motor
   myServo.attach(servo_pin);
 
-  //make servo go to inital position of 0
-  myServo.write (servo_pos);
+  //make servo go to inital position of 45
+  myServo.write(servo_pos);
 }
 
 void loop() {
@@ -65,61 +65,84 @@ void loop() {
   //calculate the difference between the two ldrs
   ldrs_difference = read_left_ldr - read_right_ldr;
 
-  //check if left ldr has a higher value than the right that means rotate stepper counterclockwise
-  if (read_left_ldr > read_right_ldr and total_steps_right != 256) {
-    myStepper.step(stepper_step); //rotate stepper by 256 steps, negative bc want stepper to rotate in other direction
-    total_steps_right = total_steps_right + stepper_step;
-    total_steps_left = 0;
-    delay(100);
+  //check if left ldr has a higher value than the right that means rotate stepper clockwise
+  if (read_left_ldr > read_right_ldr) {
+    if (total_steps_right <= 512) {
+      myStepper.step(-stepper_step); //rotate stepper by 256 steps, negative bc want stepper to rotate in other direction
+      total_steps_right = total_steps_right + stepper_step;
+      delay(100);
+    }
+    else {
+      total_steps_left = 0;
+    }
+    Serial.println ("-------------------------------------------------");
     Serial.println("Stepper rotate clockwise");
     Serial.print ("Left LDR value: ");
     Serial.println (read_left_ldr);
+    Serial.print ("Right LDR value: ");
+    Serial.println (read_right_ldr);
     Serial.print ("Total steps right: ");
-    Serial.println (total_steps_right);
+    Serial.println (total_steps_left);
+    Serial.println ("-------------------------------------------------");
     //return;
   }
   //checking if the right ldr has a larger value than the right ldr
-  else if (read_right_ldr > read_left_ldr and total_steps_left != 128) {
-    myStepper.step(-stepper_step);
-    total_steps_left = total_steps_left + stepper_step;
-    total_steps_right = 0;
-    delay(100);
+  else if (read_right_ldr > read_left_ldr) {
+    if (total_steps_left <= 512) {
+      myStepper.step(stepper_step);
+      total_steps_left = total_steps_left + stepper_step;
+      delay(100);
+    }
+    else {
+      total_steps_right = 0;
+    }
+    Serial.println ("-------------------------------------------------");
     Serial.println("Stepper rotate counterclockwise");
     Serial.print ("Left LDR value: ");
     Serial.println (read_left_ldr);
     Serial.print ("Right LDR value: ");
     Serial.println (read_right_ldr);
     Serial.print ("Total steps left: ");
-    Serial.println (total_steps_left);
+    Serial.println (total_steps_right);
+    Serial.println ("-------------------------------------------------");
     //return;
   }
-
-  //check if the ldrs_difference is positive
-  if (ldrs_difference > 0) {
-    servo_pos = servo_pos + 10; 
-    if (previous_ldrs_difference < ldrs_difference) { //checking if the previous position was better or not 
+  //tolerance for positive difference
+  if (ldrs_difference > 30) {
+    //check if the ldrs_difference is positive (ie left ldr reads more than the right)
+    if (ldrs_difference > 0 and ldrs_difference < 170) { 
       servo_pos = servo_pos - 10;
-    } 
-    myServo.write(servo_pos);
-    delay(100);
-  }
-  //check if the ldrs_difference is negative
-  else if (ldrs_difference < 0) {
-    servo_pos = servo_pos - 10;
-    if (previous_ldrs_difference < ldrs_difference) { //checking if the previous position was better or not 
+      if (previous_ldrs_difference < ldrs_difference) { //checking if the previous position was better or not 
+        servo_pos = servo_pos + 10;
+      }
+    }
+    else if (ldrs_difference >=170) {
       servo_pos = servo_pos + 10;
-    } 
-    myServo.write(servo_pos);
-    delay(100);
+      if (previous_ldrs_difference < ldrs_difference) { //checking if the previous position was better or not 
+        servo_pos = servo_pos - 10;
+      }
+    }
+      
   }
-  
-  //ensure servo angle does not go beyond the working limit
+  else if (ldrs_difference < -30) {
+    //check if the ldrs_difference is negative
+    if (ldrs_difference < 0 and ldrs_difference > -170) {
+      servo_pos = servo_pos + 10;
+      if (previous_ldrs_difference < ldrs_difference) { //checking if the previous position was better or not 
+        servo_pos = servo_pos - 10;
+      } 
+    }
+  }
+    //ensure servo angle does not go beyond the working limit
   if (servo_pos > servo_upper_limit){
     servo_pos = servo_upper_limit;
   }
   else if (servo_pos < servo_lower_limit) {
     servo_pos = servo_lower_limit;
   }
+  
+  myServo.write(servo_pos);
+  delay(100);
   
   //check values of ldr
   Serial.print ("Left LDR value: ");
@@ -132,6 +155,12 @@ void loop() {
   Serial.println (previous_ldrs_difference);
   Serial.print ("Servo position: ");
   Serial.println (servo_pos);
+  Serial.print ("Right LDR value: ");
+  Serial.println (read_right_ldr);
+  Serial.print ("Total steps left: ");
+  Serial.println (total_steps_left);
+  Serial.print ("Total steps right: ");
+  Serial.println (total_steps_right);
   Serial.println ("-------------------------------------------------");
   delay (100);
 }
