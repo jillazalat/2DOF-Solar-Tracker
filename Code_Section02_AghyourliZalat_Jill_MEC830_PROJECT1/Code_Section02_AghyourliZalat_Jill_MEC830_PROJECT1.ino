@@ -16,12 +16,15 @@ Stepper small_stepper(STEPS, 8, 10, 9, 11);
 Servo myservo;
 int angle = 90;
 int rotation = 5;
+
 // Initialize photoresistor variables
 int photocellPin1 = 0, photocellPin2 = 1;
 int photocellReading1, photocellReading2;
 
+// Error variables
 int error, prev_error;
-
+int coarse_error_threshold = 30;
+int fine_error_threshold = 5;
 
 void setup(void) {
   Serial.begin(9600); // initialize serial monitor for debugging
@@ -46,7 +49,7 @@ void loop(void) {
 
   // Azimuth Sweep (TODO: map speed of stepper to error difference)
   // -----------------------------------------------------------------
-  if (abs(error) >= 30)
+  if (abs(error) >= coarse_error_threshold)
   {
 
     if (error < 0) // 1 has a better view of light vs 2: move ccw (towards 1's perspective)
@@ -63,9 +66,10 @@ void loop(void) {
   }
 
   prev_error = error;
+  
   //  Altitude Sweep (finer refinement to make error smaller)
   // ------------------------------------------------------------------
-  if (error < 0 && error < -20)
+  if (error < 0 && error < -fine_error_threshold)
   {
     angle = angle - rotation;
     if (angle <= 0)
@@ -79,7 +83,7 @@ void loop(void) {
       myservo.write(angle+rotation); // go back to previous angle if previous error was smaller
     }
   }
-  else if (error >  0 && error > 20)
+  else if (error >  0 && error > fine_error_threshold)
   {
     angle = angle + rotation;
     
