@@ -15,7 +15,7 @@ Stepper small_stepper(STEPS, 8, 10, 9, 11);
 // Initialize servo motor variables
 Servo myservo;
 int angle = 90;
-int rotation = 5;
+int rotation = 3;
 
 // Initialize photoresistor variables
 int photocellPin1 = 0, photocellPin2 = 1;
@@ -23,15 +23,15 @@ int photocellReading1, photocellReading2;
 
 // Error variables
 int error, prev_error;
-int coarse_error_threshold = 30;
-int fine_error_threshold = 5;
+int coarse_error_threshold = 20;
+int fine_error_threshold = 10;
 
 void setup(void) {
   Serial.begin(9600); // initialize serial monitor for debugging
 
   // attach servo to necessary pins and rotate to default mode
   myservo.attach(12);
-  myservo.write(90);
+  myservo.write(0);
 
   //    Steps2Take = -256;
   small_stepper.setSpeed(250);
@@ -88,9 +88,9 @@ void loop(void) {
     angle = angle + rotation;
     
 
-     if (angle >= 150)
+     if (angle >= 180)
         {
-          angle = 150;
+          angle = 180;
         }
     myservo.write(angle);
     error = photocellReading2 - photocellReading1;
@@ -103,11 +103,13 @@ void loop(void) {
   }
 
 
+  Serial.println(error);
+   
 
  
 
   delay(100);
-  Serial.print("[loop] photocellReading1 = ");
-  Serial.print(String(photocellReading1) + " photocellReading2 = " + String(photocellReading2) + " " + String(error) + " " + String(angle) + "\n");
+//  Serial.print("photocellReading1 = ");
+//  Serial.print(String(photocellReading1) + " photocellReading2 = " + String(photocellReading2) + " " + String(error) + " " + String(angle) + "\n");
 
 }
